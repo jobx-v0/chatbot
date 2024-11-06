@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+
+# npm
+npm-debug.log
+package-lock.json
+
+# Yarn
+yarn-error.log
+yarn.lock
+
+# macOS
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Editor/IDE specific files
+.idea/
+.vscode/
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Environment variables
+.env*
+
+certs/
+
+generated_configs/
+dev/
+venv/
+templates/env/
+
+data/
