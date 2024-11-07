@@ -35,7 +35,7 @@ const jobSchema = new Schema({
     type: String,
   },
   company_logo: {
-    type: String, // Assuming the company logo is stored as a URL
+    type: String,
   },
   questions: [],
 });

@@ -11,7 +11,7 @@ const interviewQuestionSchema = new mongoose.Schema(
     },
   },
   { _id: false }
-); // Prevent auto-generating an _id for this sub-document
+);
 
 const interviewSchema = new mongoose.Schema(
   {
@@ -46,9 +46,9 @@ const interviewSchema = new mongoose.Schema(
       enum: ["Technical", "HR"],
       required: true,
     },
-    interviewQuestions: [interviewQuestionSchema], // Array of interview questions
+    interviewQuestions: [interviewQuestionSchema],
     platformLink: {
-      type: String, // Link to interview platform (e.g., Zoom, Google Meet)
+      type: String,
       required: true,
     },
     emailSent: {
@@ -67,7 +67,6 @@ const interviewSchema = new mongoose.Schema(
   { collection: "chatbot_interviews" }
 );
 
-// Middleware to update `updatedAt` on save
 interviewSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();

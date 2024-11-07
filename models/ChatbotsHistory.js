@@ -34,7 +34,7 @@ const chatHistorySchema = new mongoose.Schema(
       },
     ],
     interviewDateTime: {
-      type: Date, // ISO format combining date and time
+      type: Date,
     },
     createdAt: {
       type: Date,

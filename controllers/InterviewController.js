@@ -1,15 +1,18 @@
 const Interview = require("../models/Interview");
 const emailServices = require("../Services/EmailServices");
+const { generateMeetingLink } = require("../Services/GenerateMeetingLink");
 
 const scheduleInterview = async (user_id, job_id, interviewDateTime) => {
   try {
-    const meeting_link = "https://meet.google.com/example-link";
+    const meeting_link = generateMeetingLink(
+      user_id,
+      job_id,
+      interviewDateTime
+    );
 
-    // Check if an interview already exists for this user and job
     let interview = await Interview.findOne({ user_id, job_id });
     let isReSchedule = false;
     if (interview) {
-      // If an interview already exists, update it
       interview.scheduledTime = interviewDateTime;
       interview.platformLink = meeting_link;
       interview.updatedAt = Date.now();
@@ -18,7 +21,6 @@ const scheduleInterview = async (user_id, job_id, interviewDateTime) => {
       isReSchedule = true;
       console.log("Existing interview updated.");
     } else {
-      // If no existing interview, create a new one
       interview = new Interview({
         user_id,
         job_id,
@@ -30,7 +32,6 @@ const scheduleInterview = async (user_id, job_id, interviewDateTime) => {
       console.log("New interview scheduled.");
     }
 
-    // Send email notification
     emailServices.notifyInterview(
       user_id,
       job_id,
