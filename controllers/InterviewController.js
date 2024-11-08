@@ -19,7 +19,6 @@ const scheduleInterview = async (user_id, job_id, interviewDateTime) => {
 
       await interview.save();
       isReSchedule = true;
-      console.log("Existing interview updated.");
     } else {
       interview = new Interview({
         user_id,
@@ -29,7 +28,6 @@ const scheduleInterview = async (user_id, job_id, interviewDateTime) => {
         platformLink: meeting_link,
       });
       await interview.save();
-      console.log("New interview scheduled.");
     }
 
     emailServices.notifyInterview(
