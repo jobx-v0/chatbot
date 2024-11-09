@@ -101,76 +101,102 @@ const getNextOptions = async (req, res) => {
 
   const user_id = req?.user?.id || req?.user?._id;
 
-  let response;
+  try {
+    let response;
 
-  await saveChatHistory(user_id, job_id, "User", userResponseText);
+    await saveChatHistory(user_id, job_id, "User", userResponseText);
 
-  if (
-    userResponseValue === "schedule" ||
-    userResponseValue === "reschedule" ||
-    userResponseValue === "update-date"
-  ) {
-    response = {
-      value: "date",
-      nextMessage: "Please select a date for the interview:",
-      nextOptions: [{ text: "Confirm Date", value: "input-date" }],
-    };
-  } else if (
-    userResponseValue === "input-date" ||
-    userResponseValue === "update-time"
-  ) {
-    response = {
-      value: "time",
-      nextMessage: "Please enter the time for the interview:",
-      nextOptions: [{ text: "Confirm Time", value: "input-time" }],
-    };
-  } else if (userResponseValue === "input-time") {
-    const dateTimeString = `${date}T${time}:00`;
+    if (
+      userResponseValue === "schedule" ||
+      userResponseValue === "reschedule" ||
+      userResponseValue === "update-date"
+    ) {
+      response = {
+        value: "input-date",
+        nextMessage: "Please select a date for the interview:",
+        nextOptions: [{ text: "Confirm Date", value: "input-date" }],
+      };
+    } else if (
+      userResponseValue === "input-date" ||
+      userResponseValue === "update-time"
+    ) {
+      response = {
+        value: "input-time",
+        nextMessage: "Please enter the time for the interview:",
+        nextOptions: [{ text: "Confirm Time", value: "input-time" }],
+      };
+    } else if (userResponseValue === "input-time") {
+      if (date === null) {
+        response = {
+          value: "input-date",
+          nextMessage: "Please select a date for the interview:",
+          nextOptions: [{ text: "Confirm Date", value: "input-date" }],
+        };
+      } else if (time === null) {
+        response = {
+          value: "input-time",
+          nextMessage: "Please enter the time for the interview:",
+          nextOptions: [{ text: "Confirm Time", value: "input-time" }],
+        };
+      } else {
+        const dateTimeString = `${date}T${time}:00`;
 
-    const interviewDateTime = new Date(dateTimeString).toISOString();
+        const interviewDateTime = new Date(dateTimeString).toISOString();
 
-    await ChatHistory.updateOne(
-      { user_id, job_id },
-      { $set: { interviewDateTime } }
+        await ChatHistory.updateOne(
+          { user_id, job_id },
+          { $set: { interviewDateTime } }
+        );
+
+        response = {
+          nextMessage: `Your interview date: ${date} and time: ${time} are confirmed. Do you want to proceed?`,
+          nextOptions: [
+            { text: "Update Date", value: "update-date" },
+            { text: "Update Time", value: "update-time" },
+            { text: "Confirm", value: "confirm-schedule" },
+          ],
+        };
+      }
+    } else if (userResponseValue === "confirm-schedule") {
+      let interviewDateTime = await getInterviewDateTime(user_id, job_id);
+
+      let link = await scheduleInterview(user_id, job_id, interviewDateTime);
+
+      response = {
+        nextMessage: `Your interview has been scheduled. Here is your meeting link: ${link}`,
+        nextOptions: [{ text: "Reschedule Interview", value: "reschedule" }],
+      };
+    } else {
+      response = {
+        nextMessage:
+          "I'm sorry, I didn't understand that. Please select an option from the list.",
+        nextOptions: [
+          { text: "Schedule Interview", value: "schedule" },
+          { text: "Reschedule Interview", value: "reschedule" },
+        ],
+      };
+    }
+
+    await saveChatHistory(
+      user_id,
+      job_id,
+      "Bot",
+      response.nextMessage,
+      response.nextOptions
     );
 
-    response = {
-      nextMessage: `Your interview date: ${date} and time: ${time} are confirmed. Do you want to proceed?`,
-      nextOptions: [
-        { text: "Update Date", value: "update-date" },
-        { text: "Update Time", value: "update-time" },
-        { text: "Confirm", value: "confirm-schedule" },
-      ],
-    };
-  } else if (userResponseValue === "confirm-schedule") {
-    let interviewDateTime = await getInterviewDateTime(user_id, job_id);
-
-    let link = await scheduleInterview(user_id, job_id, interviewDateTime);
-
-    response = {
-      nextMessage: `Your interview has been scheduled. Here is your meeting link: ${link}`,
-      nextOptions: [{ text: "Reschedule Interview", value: "reschedule" }],
-    };
-  } else {
-    response = {
+    return res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.json({
       nextMessage:
         "I'm sorry, I didn't understand that. Please select an option from the list.",
       nextOptions: [
         { text: "Schedule Interview", value: "schedule" },
         { text: "Reschedule Interview", value: "reschedule" },
       ],
-    };
+    });
   }
-
-  await saveChatHistory(
-    user_id,
-    job_id,
-    "Bot",
-    response.nextMessage,
-    response.nextOptions
-  );
-
-  return res.json(response);
 };
 
 module.exports = {
